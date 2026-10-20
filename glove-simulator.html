@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>オリジナルグローブ シミュレーター｜BODYMAKER</title>
+<style>
+:root{
+  --bg:#f4f4f2; --panel:#fff; --ink:#1a1a1a; --sub:#6b6b6b; --line:#e2e2de;
+  --accent:#F5C400; --accent-ink:#1a1a1a; --stage:#ecebe7;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;line-height:1.6}
+header{background:#111;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px}
+header .tag{background:var(--accent);color:#111;font-weight:800;font-size:12px;padding:2px 8px;border-radius:3px;letter-spacing:.05em}
+header h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.03em}
+.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 60px;display:grid;grid-template-columns:1.25fr 1fr;gap:20px;align-items:start}
+.stage{position:sticky;top:12px;background:var(--panel);border-radius:12px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.stage-inner{background:radial-gradient(circle at 50% 40%,#fff 0%,var(--stage) 75%);border-radius:8px}
+#preview{width:100%;height:auto;display:block}
+.hand-label{display:flex;justify-content:space-around;font-size:12px;color:var(--sub);margin-top:4px}
+.stage-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{border-color:#999}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.dark{background:#111;border-color:#111;color:#fff}
+.panel{background:var(--panel);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:#fafafa;padding:13px 4px;font-size:14px;font-weight:700;cursor:pointer;color:var(--sub);font-family:inherit;border-bottom:3px solid transparent}
+.tabs button.on{background:#fff;color:var(--ink);border-bottom-color:var(--accent)}
+.tab{display:none;padding:18px}
+.tab.on{display:block}
+h3{font-size:14px;margin:18px 0 8px}
+h3:first-child{margin-top:0}
+.parts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.part{display:flex;align-items:center;gap:8px;border:2px solid var(--line);background:#fff;border-radius:8px;padding:8px;cursor:pointer;font-size:13px;font-weight:700;text-align:left;font-family:inherit}
+.part.on{border-color:var(--ink)}
+.part .sw{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.2);flex:none}
+.part small{display:block;font-weight:400;color:var(--sub);font-size:11px;line-height:1.2}
+.palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+.chip{border:2px solid transparent;background:none;padding:4px 2px;border-radius:8px;cursor:pointer;font-family:inherit;text-align:center}
+.chip .c{width:36px;height:36px;border-radius:50%;margin:0 auto 3px;border:1px solid rgba(0,0,0,.18)}
+.chip span{display:block;font-size:10px;line-height:1.25;color:#333}
+.chip.on{border-color:var(--ink);background:#f6f6f3}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:8px 12px;font-size:13px;cursor:pointer;font-family:inherit;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:#111;color:#fff}
+.drop{border:2px dashed #c9c9c4;border-radius:10px;padding:22px;text-align:center;cursor:pointer;background:#fafaf8}
+.drop:hover,.drop.over{border-color:var(--ink);background:#f3f3ef}
+.drop strong{display:block;font-size:14px}
+.drop span{font-size:12px;color:var(--sub)}
+.logo-chip{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:10px}
+.logo-chip img{width:56px;height:56px;object-fit:contain;background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/12px 12px;border-radius:4px}
+.logo-chip .name{flex:1;font-size:12px;word-break:break-all}
+label.ck{display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer}
+input[type=range]{width:100%}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+input[type=text],input[type=number],select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;background:#fff}
+textarea{min-height:70px;resize:vertical}
+.info{margin-top:12px;background:#FFF8D6;border-left:4px solid var(--accent);border-radius:6px;padding:10px 12px;font-size:12.5px;line-height:1.7}
+.info strong{display:block;font-size:13px;margin-bottom:2px}
+.warn{color:#D61F26;font-weight:700;font-size:13px;margin:10px 0 0}
+.note{font-size:11.5px;color:var(--sub);margin-top:10px}
+.spec{background:#f7f7f4;border-radius:8px;padding:12px;font-size:13px;white-space:pre-wrap;font-family:inherit;margin:0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.mini{font-size:12px;padding:6px 10px}
+@media (max-width:860px){
+  .wrap{grid-template-columns:1fr}
+  .stage{top:0;z-index:5;border-radius:0 0 12px 12px;margin:-20px -16px 0}
+  .parts{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="tag">SIMULATOR</span>
+  <h1>オリジナルグローブ シミュレーター</h1>
+</header>
+
+<div class="wrap">
+  <!-- ===== プレビュー ===== -->
+  <section class="stage">
+    <div class="stage-inner">
+      <svg id="preview" viewBox="0 0 840 575" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+    </div>
+    <div class="hand-label"><span>左手</span><span>右手</span></div>
+    <div class="stage-actions">
+      <button class="btn" id="btnReset">リセット</button>
+      <button class="btn dark" id="btnSave">画像を保存</button>
+      <button class="btn primary" id="btnGoOrder">このデザインで相談する</button>
+    </div>
+  </section>
+
+  <!-- ===== 操作パネル ===== -->
+  <section class="panel">
+    <div class="tabs">
+      <button data-tab="color" class="on">カラー</button>
+      <button data-tab="logo">ロゴ</button>
+      <button data-tab="order">仕様確認</button>
+    </div>
+
+    <!-- カラー -->
+    <div class="tab on" id="tab-color">
+      <h3>パーツを選択</h3>
+      <div class="parts" id="parts"></div>
+      <p class="note" style="margin-top:8px">※手首・ベルトは本体と同じ色になります。</p>
+      <h3 id="paletteTitle">カラー選択</h3>
+      <div class="palette" id="palette"></div>
+      <div class="row" style="margin-top:14px">
+        <label class="ck"><input type="checkbox" id="thumbLink" checked> 親指を本体と同じ色にする</label>
+      </div>
+    </div>
+
+    <!-- ロゴ -->
+    <div class="tab" id="tab-logo">
+      <h3>ジム・チームロゴをアップロード</h3>
+      <div class="drop" id="drop">
+        <strong>クリックまたはドラッグ＆ドロップ</strong>
+        <span>PNG・JPG・SVG（5MBまで）／背景が透明なPNGがおすすめです</span>
+      </div>
+      <input type="file" id="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+      <div id="logoInfo"></div>
+      <div class="info">
+        <strong>ご発注時のロゴデータについて</strong>
+        ご発注の際は、ロゴのAI（Adobe Illustrator）データが必要です。あらかじめご準備ください。<br>
+        AIデータをお持ちでない場合は、別途データ作成費<b>15,000円（税込）</b>にて当社で作成いたします。
+      </div>
+      <label class="ck" style="margin-top:10px"><input type="checkbox" id="removeWhite" checked> 白い背景を自動で透過する（JPG用）</label>
+
+      <h3>ロゴの大きさ</h3>
+      <input type="range" id="logoScale" min="40" max="100" value="100">
+      <h3>ロゴの上下位置</h3>
+      <input type="range" id="logoY" min="-100" max="100" value="0">
+      <p class="warn">プリント可能箇所は中央の8cm×8cmに限ります。</p>
+      <p class="note" style="margin-top:4px">※ロゴは甲の中央（両手）に入ります。プレビューの赤い点線がプリント可能範囲の目安です。</p>
+
+      <p class="note">※ロゴの色はカラータブの「BODYMAKERロゴ」で変更できます。<br>※シミュレーション上の表示はイメージです。刺繍・プリントの可否や色数は別途ご案内します。</p>
+    </div>
+
+    <!-- 仕様確認 -->
+    <div class="tab" id="tab-order">
+      <h3>お客様情報</h3>
+      <div class="field"><label>ジム・会社名</label><input type="text" id="cCompany" placeholder="例：〇〇ボクシングジム"></div>
+      <div class="field"><label>ご担当者名</label><input type="text" id="cName"></div>
+      <div class="field"><label>電話番号</label><input type="text" id="cTel" inputmode="tel"></div>
+      <h3>ご希望内容</h3>
+      <div class="field">
+        <label>サイズ（オンス）</label>
+        <select id="oz">
+          <option>8oz</option><option>10oz</option><option selected>12oz</option>
+          <option>14oz</option><option>16oz</option><option>複数サイズ・未定</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>希望数量（12個単位）</label>
+        <input type="number" id="qty" min="12" step="12" value="12">
+      </div>
+      <div class="field">
+        <label>ご要望・備考</label>
+        <textarea id="memo" placeholder="希望納期、サイズ別の内訳など"></textarea>
+      </div>
+      <h3>現在の仕様</h3>
+      <pre class="spec" id="spec"></pre>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnCopy">仕様をコピー</button>
+        <button class="btn dark" id="btnSave2">画像を保存</button>
+      </div>
+      <div class="info">
+        <strong>メールでのご相談方法</strong>
+        ①「メールで相談する」を押すと、デザイン画像が保存され、メールソフトが開きます（仕様は本文に自動で入ります）。<br>
+        ② 保存されたデザイン画像と、ロゴの画像を<b>メールに添付</b>して送信してください。<br>
+        送信先：<span id="mailAddr"></span>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <a class="btn primary" id="btnContact" href="#" target="_top" style="text-decoration:none;font-size:15px;padding:12px 20px">メールで相談する</a>
+      </div>
+      <p class="note">※メールソフトが開かない場合は、「仕様をコピー」で内容をコピーし、上記アドレスへ画像を添付してお送りください。<br>※ロゴを入れる場合、ご発注時にAI（Adobe Illustrator）データが必要です。お持ちでない場合は、別途データ作成費15,000円（税込）にて作成いたします。<br>価格・最小ロット・納期はお見積りにてご案内します。</p>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   設定（HP組み込み時にここだけ書き換えてください）
+   ============================================================ */
+const CONTACT_EMAIL = "trade@bodymaker.jp"; // ← ご相談メールの送信先
+// 公式のBロゴ画像（SVG/PNG）を使う場合はURLを指定。空なら簡易的なBマークを描画します。
+// ※同じドメインに置いてください（画像保存時に読み込むため）
+const BRAND_LOGO_URL = "";
+
+/* ============================================================
+   カラーパレット（番号・名称・色）
+   ============================================================ */
+const PALETTE = [
+  // [キー, 色番号, 名称, 表示色, パイピング専用]
+  ["002","002","ホワイト","#F5F5F2",false],
+  ["005","005","オフホワイト","#ECE5D2",false],
+  ["108","108","パステルイエロー","#F6E9A0",false],
+  ["106","106","レモン","#F3E33A",false],
+  ["105","105","イエロー","#F5C400",false],
+  ["109","109","サーモンピンク","#F28C7A",false],
+  ["112","112","オレンジ","#F07A1A",false],
+  ["121","121","レッド","#D61F26",false],
+  ["122","122","エンジ","#7A1F2B",false],
+  ["110","110","ピンク","#D9387A",false],
+  ["69","69","パステルピンク","#F4B6C8",false],
+  ["091","091","フジ","#A58CC8",false],
+  ["126","126","パープル","#5B2C83",false],
+  ["167","167","ネイビー","#1C2541",false],
+  ["166","166","インディゴ","#2A3A6E",false],
+  ["160","160","ブルー","#1F5BB5",false],
+  ["161","161","ロイヤルブルー","#1A3FA0",false],
+  ["080","080","アクア","#4FC3E0",false],
+  ["076","076","パステルブルー","#A7CFEA",false],
+  ["077","077","サックス","#6FA8DC",false],
+  ["082","082","ターコイズ","#18A7A0",false],
+  ["098","098","パステルグリーン","#A9DDB0",false],
+  ["099","099","ライム","#A6CE39",false],
+  ["097","097","リーフグリーン","#4CAF50",false],
+  ["096","096","ライトグリーン","#2E9E4F",false],
+  ["162","162","ダークグリーン","#1B5E3A",false],
+  ["165","165","カーキ","#7D7650",false],
+  ["136","136","ブラウン","#5A3A26",false],
+  ["GOLD","","ゴールド","#C9A43B",true],
+  ["001","001","グレー","#9A9A9A",false],
+  ["173","173","ブラック","#1C1C1C",false]
+];
+const COLOR = Object.fromEntries(PALETTE.map(p=>[p[0],{no:p[1],name:p[2],hex:p[3],pipingOnly:p[4]}]));
+const label = k => COLOR[k].no ? `${COLOR[k].no} ${COLOR[k].name}` : COLOR[k].name;
+
+const PARTS = [
+  {key:"body",  name:"本体"},
+  {key:"thumb", name:"親指"},
+  {key:"piping",name:"パイピング", only:["173","002","121","001","GOLD"]},
+  {key:"bm",    name:"BODYMAKERロゴ"}
+];
+// 変更できないパーツの色（固定）
+const FIXED = {stitch:"#474747"}; // 手首・ベルトは本体色に連動
+// プリント可能範囲（8cm×8cm）をプレビュー上で表す枠（甲の中央）
+const PRINT = {cx:182, cy:215, size:110};
+
+const DEFAULT = {
+  colors:{body:"173",thumb:"173",piping:"173",bm:"105"},
+  bmShow:true, thumbLink:true,
+  logo:null, logoName:"", logoRaw:null, logoIsSvg:false,
+  logoScale:100, logoY:0, removeWhite:true
+};
+let S = structuredClone(DEFAULT);
+let activePart = "body";
+let brandLogoData = null;
+
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ============================================================
+   グローブ描画（親指が右側のグローブ＝左手。右手は左右反転）
+   ============================================================ */
+function glove(c){
+  const st = FIXED.stitch, pp = c.piping;
+  const dash = `stroke="${st}" stroke-width="1.6" stroke-dasharray="4 3" fill="none" stroke-linecap="round"`;
+  const BODY  = "M62 150 C58 80 110 42 195 40 C265 38 302 62 306 122 L304 330 C300 368 286 384 276 392 L112 392 C96 380 80 342 72 292 C66 248 64 200 62 150 Z";
+  const THUMB = "M292 148 C306 124 338 126 348 156 C360 192 356 262 334 322 C322 352 304 374 284 390 L262 390 C282 344 288 292 287 240 C286 200 284 170 292 148 Z";
+  const SEAM  = "M292 148 C284 170 286 200 287 240 C288 292 282 344 262 390";
+  const pipe = (d,cap="round") => `<path d="${d}" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="8" stroke-linecap="${cap}" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${pp}" stroke-width="5.5" stroke-linecap="${cap}" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.5" stroke-linecap="${cap}" transform="translate(-.8,-.8)"/>`;
+  const CUFF  = "M110 386 L282 386 L286 528 Q286 540 274 540 L118 540 Q106 540 106 528 Z";
+  return `
+  <ellipse cx="200" cy="552" rx="150" ry="12" fill="#000" opacity=".16" filter="url(#soft)"/>
+  <path d="${CUFF}" fill="${c.body}"/>
+  <path d="${CUFF}" fill="url(#edge)"/>
+  ${pipe("M106.5 531 Q107 539.5 118 539.5 L274 539.5 Q285 539.5 285.5 531")}
+  <line x1="112" y1="398" x2="282" y2="398" ${dash}/>
+  <line x1="112" y1="410" x2="282" y2="410" ${dash}/>
+  <rect x="96" y="420" width="200" height="88" rx="10" fill="${c.body}"/>
+  <rect x="96" y="420" width="200" height="88" rx="10" fill="url(#edge)"/>
+  <rect x="96" y="420" width="200" height="88" rx="10" fill="url(#hlStrap)"/>
+  <rect x="96" y="420" width="200" height="88" rx="10" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="8"/>
+  <rect x="96" y="420" width="200" height="88" rx="10" fill="none" stroke="${pp}" stroke-width="5.5"/>
+  <rect x="95.2" y="419.2" width="200" height="88" rx="10" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1.5"/>
+  <rect x="103" y="427" width="186" height="74" rx="7" ${dash}/>
+  <line x1="110" y1="518" x2="284" y2="518" ${dash}/>
+  <line x1="110" y1="531" x2="284" y2="531" ${dash}/>
+  <path d="${BODY}" fill="${c.body}"/>
+  <path d="${BODY}" fill="url(#edge)"/>
+  <path d="${BODY}" fill="url(#hl)"/>
+  <path d="${BODY}" fill="url(#vshade)"/>
+  <g stroke="#000" stroke-opacity=".45" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M64 128 Q80 134 96 131"/><path d="M63 146 Q80 150 98 145"/>
+    <path d="M63 164 Q78 166 92 162"/><path d="M64 182 Q76 183 86 180"/>
+  </g>
+  <path d="M112 392 L276 392" stroke="#000" stroke-opacity=".35" stroke-width="3"/>
+  ${pipe("M111 396 L283 396","butt")}
+  <path d="${THUMB}" fill="${c.thumb}"/>
+  <path d="${THUMB}" fill="url(#edgeThumb)"/>
+  <path d="${THUMB}" fill="url(#hl)"/>
+  <path d="${SEAM}" stroke="#000" stroke-opacity=".35" stroke-width="5" fill="none"/>
+  <path d="${SEAM}" stroke="${st}" stroke-width="1.8" fill="none"/>
+  <g stroke="#000" stroke-opacity=".5" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M262 126 Q278 136 288 150"/><path d="M256 140 Q273 146 286 156"/>
+    <path d="M252 157 Q270 158 286 163"/><path d="M302 118 Q299 132 295 145"/>
+    <path d="M316 122 Q306 135 299 147"/>
+  </g>
+  <g stroke="#fff" stroke-opacity=".12" stroke-width="1.5" fill="none" stroke-linecap="round">
+    <path d="M262 130 Q278 140 288 153"/><path d="M256 144 Q273 150 286 159"/>
+  </g>
+  `;
+}
+
+/* BODYMAKER Bマーク（原寸 453×229 の画像からトレース／実寸範囲 x16-438, y12-220） */
+const BMARK = "M318.5 219.4C252.5 209.2 162.7 156.7 67.4 72.5C54.5 61.1 16.0 25.0 16.0 24.3C16.0 24.0 16.6 24.2 17.2 24.7C17.9 25.2 24.3 30.2 31.5 35.7C113.4 98.7 193.9 145.7 250.0 163.5C281.6 173.5 308.1 174.7 320.7 166.7C326.3 163.1 328.4 160.4 328.3 156.6C328.0 146.2 311.7 129.2 274.5 100.5C266.8 94.6 260.1 89.4 259.6 88.9C259.1 88.5 263.2 89.5 268.6 91.1C300.0 100.5 330.1 106.3 348.7 106.4C360.6 106.5 362.1 106.3 364.7 104.4C366.8 102.8 367.6 101.3 367.8 98.3C369.0 82.5 326.1 59.9 258.5 40.5C228.6 31.9 173.0 19.2 146.7 14.9C123.5 11.1 163.7 12.0 199.3 16.1C281.8 25.6 346.4 40.8 387.5 60.4C419.5 75.7 433.4 87.9 437.7 104.4C439.2 109.9 439.3 111.8 438.2 116.6C435.9 127.7 427.6 136.7 415.3 141.2C410.4 143.1 407.4 143.4 396.0 143.4C383.5 143.4 381.9 143.2 373.5 140.3C368.6 138.6 364.4 137.3 364.3 137.4C364.1 137.5 367.9 140.8 372.7 144.6C397.7 164.6 406.9 185.5 397.7 201.3C389.8 214.7 371.6 221.1 342.1 220.9C334.1 220.8 323.4 220.2 318.5 219.4Z";
+
+function brandMark(cx,cy,color){
+  const w=78;                     // ベルト上での表示幅
+  const k=w/422, h=208*k;
+  if(BRAND_LOGO_URL && brandLogoData){
+    return `<image href="${brandLogoData}" x="${cx-w/2}" y="${cy-h/2}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
+  }
+  return `<path d="${BMARK}" fill="${color}" transform="translate(${cx-w/2-16*k},${cy-h/2-12*k}) scale(${k})"/>`;
+}
+
+function isLight(hex){
+  const n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;
+  return (r*299+g*587+b*114)/1000>150;
+}
+
+function overlays(h){
+  const X = x => h==="L" ? 10+x : 830-x;
+  let o="";
+  const cx = X(PRINT.cx);
+
+  // BODYMAKERロゴ（ベルト）
+  if(S.bmShow) o += brandMark(h==="L" ? 206 : 634, 464, COLOR[S.colors.bm].hex);
+
+  // プリント可能範囲の目安（ロゴタブ表示中のみ・画像保存には含めない）
+  if(showGuide){
+    const g=PRINT.size;
+    o += `<g class="guide"><rect x="${cx-g/2}" y="${PRINT.cy-g/2}" width="${g}" height="${g}" fill="none" stroke="#ff3b3b" stroke-width="2" stroke-dasharray="6 5"/><text x="${cx}" y="${PRINT.cy-g/2-8}" text-anchor="middle" font-size="13" font-weight="700" fill="#ff3b3b">8cm × 8cm</text></g>`;
+  }
+
+  // ジムロゴ（甲の中央・両手）—プリント範囲からはみ出さないよう制限
+  if(S.logo){
+    const k=S.logoScale/100, size=PRINT.size*k;
+    const room=(PRINT.size-size)/2;
+    const dy=Math.max(-room,Math.min(room, room*Number(S.logoY)/100));
+    const cy=PRINT.cy+dy;
+    o += `<image href="${S.logo}" x="${cx-size/2}" y="${cy-size/2}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet"/>`;
+  }
+  return o;
+}
+
+function render(){
+  const c = Object.fromEntries(Object.entries(S.colors).map(([k,v])=>[k,COLOR[v].hex]));
+  const g = glove(c);
+  $("#preview").innerHTML = `
+  <defs>
+    <radialGradient id="hl" cx=".34" cy=".2" r=".75">
+      <stop offset="0" stop-color="#fff" stop-opacity=".26"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hlStrap" cx=".4" cy=".2" r=".9">
+      <stop offset="0" stop-color="#fff" stop-opacity=".14"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="edge" x1="0" x2="1">
+      <stop offset="0" stop-color="#000" stop-opacity=".38"/><stop offset=".2" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".8" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".42"/>
+    </linearGradient>
+    <linearGradient id="edgeThumb" x1="0" x2="1">
+      <stop offset="0" stop-color="#000" stop-opacity=".25"/><stop offset=".45" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".45"/>
+    </linearGradient>
+    <linearGradient id="vshade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000" stop-opacity=".05"/><stop offset=".75" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".28"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="8"/></filter>
+  </defs>
+  <g transform="translate(10,0)">${g}</g>
+  <g transform="translate(830,0) scale(-1,1)">${g}</g>
+  ${overlays("L")}${overlays("R")}`;
+  renderParts(); renderSpec();
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+function renderParts(){
+  $("#parts").innerHTML = PARTS.map(p=>{
+    const col=COLOR[S.colors[p.key]];
+    return `<button class="part ${p.key===activePart?"on":""}" data-part="${p.key}">
+      <span class="sw" style="background:${col.hex}"></span>
+      <span>${p.name}<small>${label(S.colors[p.key])}</small></span></button>`;
+  }).join("");
+  $("#paletteTitle").textContent = `カラー選択：${PARTS.find(p=>p.key===activePart).name}`;
+  const only=PARTS.find(p=>p.key===activePart).only;
+  document.querySelectorAll("#palette .chip").forEach(b=>{
+    b.style.display = (only ? only.includes(b.dataset.code) : !COLOR[b.dataset.code].pipingOnly) ? "" : "none";
+    b.classList.toggle("on",b.dataset.code===S.colors[activePart]);
+  });
+}
+function chipHTML(p){ return `<button class="chip" data-code="${p[0]}" title="${label(p[0])}"><div class="c" style="background:${p[3]}"></div><span>${p[1]?p[1]+"<br>":""}${p[2]}</span></button>`; }
+$("#palette").innerHTML = PALETTE.map(chipHTML).join("");
+
+$("#parts").addEventListener("click",e=>{
+  const b=e.target.closest(".part"); if(!b) return;
+  activePart=b.dataset.part; renderParts();
+});
+$("#palette").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b) return;
+  const code=b.dataset.code;
+  S.colors[activePart]=code;
+  if(activePart==="body" && S.thumbLink) S.colors.thumb=code;          // 本体を変えると親指も連動
+  if(activePart==="thumb" && code!==S.colors.body){ S.thumbLink=false; $("#thumbLink").checked=false; } // 親指だけ別色にしたら連動を解除
+  render();
+});
+$("#thumbLink").onchange=e=>{ S.thumbLink=e.target.checked; if(S.thumbLink) S.colors.thumb=S.colors.body; render(); };
+
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.id==="tab-"+b.dataset.tab));
+  showGuide = b.dataset.tab==="logo"; render();
+});
+let showGuide=false;
+
+
+$("#logoScale").oninput=e=>{S.logoScale=e.target.value;render();};
+$("#logoY").oninput=e=>{S.logoY=e.target.value;render();};
+["#oz","#qty","#memo","#cCompany","#cName","#cTel"].forEach(id=>$(id).addEventListener("input",renderSpec));
+// 数量は12個単位（12未満は12、端数は切り上げ）
+$("#qty").addEventListener("change",e=>{
+  const v=parseInt(e.target.value,10);
+  const n=isNaN(v)||v<12 ? 12 : Math.ceil(v/12)*12;
+  if(n!==v) toast("数量は12個単位です（"+n+"個に調整しました）");
+  e.target.value=n; renderSpec();
+});
+
+/* ---------- ロゴアップロード ---------- */
+const drop=$("#drop"), file=$("#file");
+drop.onclick=()=>file.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add("over");};
+drop.ondragleave=()=>drop.classList.remove("over");
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove("over");if(e.dataTransfer.files[0])loadLogo(e.dataTransfer.files[0]);};
+file.onchange=()=>{ if(file.files[0]) loadLogo(file.files[0]); file.value=""; };
+$("#removeWhite").onchange=e=>{ S.removeWhite=e.target.checked; if(S.logoRaw) processLogo(); };
+
+function loadLogo(f){
+  if(f.size>5*1024*1024){ toast("5MB以下の画像を選んでください"); return; }
+  const r=new FileReader();
+  r.onload=()=>{
+    S.logoRaw=r.result; S.logoName=f.name; S.logoIsSvg=f.type==="image/svg+xml";
+    processLogo();
+  };
+  r.readAsDataURL(f);
+}
+function processLogo(){
+  if(S.logoIsSvg || !S.removeWhite){ S.logo=S.logoRaw; afterLogo(); return; }
+  const img=new Image();
+  img.onload=()=>{
+    const max=900, k=Math.min(1,max/Math.max(img.width,img.height));
+    const cv=document.createElement("canvas");
+    cv.width=Math.round(img.width*k); cv.height=Math.round(img.height*k);
+    const cx=cv.getContext("2d"); cx.drawImage(img,0,0,cv.width,cv.height);
+    const d=cx.getImageData(0,0,cv.width,cv.height), p=d.data;
+    for(let i=0;i<p.length;i+=4){
+      const m=Math.min(p[i],p[i+1],p[i+2]);
+      if(m>238) p[i+3]=0;
+      else if(m>215) p[i+3]=Math.round(p[i+3]*(238-m)/23);
+    }
+    cx.putImageData(d,0,0);
+    S.logo=cv.toDataURL("image/png"); afterLogo();
+  };
+  img.src=S.logoRaw;
+}
+function afterLogo(){
+  $("#logoInfo").innerHTML = `<div class="logo-chip"><img src="${S.logo}" alt=""><div class="name">${esc(S.logoName)}</div><button class="btn mini" id="btnDelLogo">削除</button></div>`;
+  $("#btnDelLogo").onclick=()=>{ S.logo=null;S.logoRaw=null;S.logoName="";$("#logoInfo").innerHTML="";render(); };
+  render(); toast("ロゴを反映しました");
+}
+
+/* ---------- 仕様テキスト ---------- */
+const handTxt={both:"両手",L:"左手のみ",R:"右手のみ"};
+function specText(){
+  const L=[];
+  const cust=[["ジム・会社名","#cCompany"],["ご担当者名","#cName"],["電話番号","#cTel"]];
+  L.push("【お客様情報】");
+  cust.forEach(([k,id])=>L.push(`${k}：${$(id).value.trim()}`));
+  L.push("");
+  L.push("【BODYMAKER オリジナルグローブ 仕様】");
+  PARTS.forEach(p=>{
+    if(p.key==="bm" && !S.bmShow) return;
+    L.push(`${p.name}：${label(S.colors[p.key])}`);
+  });
+  L.push(`手首・ベルト：本体と同色（${label(S.colors.body)}）`);
+  if(!S.bmShow) L.push("BODYMAKERロゴ：なし");
+  L.push(`ジムロゴ：${S.logo ? `あり（甲・両手）ファイル名：${S.logoName}` : "なし"}`);
+  L.push(`サイズ：${$("#oz").value}`);
+  L.push(`希望数量：${$("#qty").value}個（12個単位）`);
+  if($("#memo").value.trim()) L.push(`備考：${$("#memo").value.trim()}`);
+  return L.join("\n");
+}
+function renderSpec(){ $("#spec").textContent=specText(); }
+
+$("#btnCopy").onclick=async()=>{
+  try{ await navigator.clipboard.writeText(specText()); toast("仕様をコピーしました"); }
+  catch(e){ toast("コピーできませんでした。手動で選択してください"); }
+};
+$("#mailAddr").textContent = CONTACT_EMAIL;
+function mailtoURL(){
+  const company=$("#cCompany").value.trim();
+  const subject=`オリジナルグローブのご相談${company?`（${company}）`:""}`;
+  const body=specText()+"\n\n――――――――――――\n※デザイン画像（bodymaker_glove_design.png）と、ロゴ画像を添付してお送りください。\n";
+  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body.replace(/\n/g,"\r\n"))}`;
+}
+$("#btnContact").addEventListener("click",e=>{
+  e.currentTarget.href = mailtoURL();   // 最新の仕様を本文に入れる
+  savePNG();                            // デザイン画像を保存（添付用）
+});
+$("#btnGoOrder").onclick=()=>{ document.querySelector('.tabs button[data-tab="order"]').click(); $(".panel").scrollIntoView({behavior:"smooth"}); };
+
+/* ---------- シャッフル・リセット ---------- */
+$("#btnReset").onclick=()=>{
+  if(!confirm("デザインを初期状態に戻しますか？")) return;
+  S=structuredClone(DEFAULT); activePart="body";
+  $("#qty").value=12; $("#logoInfo").innerHTML=""; $("#logoScale").value=100; $("#logoY").value=0;
+  $("#removeWhite").checked=true; $("#thumbLink").checked=true;
+  render();
+};
+
+/* ---------- 画像保存（PNG） ---------- */
+function savePNG(){
+  const svg=$("#preview").cloneNode(true);
+  svg.querySelectorAll(".guide").forEach(n=>n.remove());
+  svg.setAttribute("width",1680); svg.setAttribute("height",1150);
+  const bg=document.createElementNS("http://www.w3.org/2000/svg","rect");
+  bg.setAttribute("width","840");bg.setAttribute("height","575");bg.setAttribute("fill","#ffffff");
+  svg.insertBefore(bg,svg.querySelector("g"));
+  const src=new XMLSerializer().serializeToString(svg);
+  const url=URL.createObjectURL(new Blob([src],{type:"image/svg+xml;charset=utf-8"}));
+  const img=new Image();
+  img.onload=()=>{
+    const cv=document.createElement("canvas"); cv.width=1680; cv.height=1150;
+    const cx=cv.getContext("2d"); cx.drawImage(img,0,0);
+    URL.revokeObjectURL(url);
+    cv.toBlob(b=>{
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(b); a.download="bodymaker_glove_design.png"; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+      toast("画像を保存しました");
+    },"image/png");
+  };
+  img.onerror=()=>toast("画像を保存できませんでした");
+  img.src=url;
+}
+$("#btnSave").onclick=savePNG; $("#btnSave2").onclick=savePNG;
+
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
+
+/* ---------- 公式ロゴ読み込み（任意） ---------- */
+(async()=>{
+  if(BRAND_LOGO_URL){
+    try{
+      const b=await (await fetch(BRAND_LOGO_URL)).blob();
+      brandLogoData=await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b);});
+    }catch(e){}
+  }
+  render();
+})();
+</script>
+</body>
+</html>
