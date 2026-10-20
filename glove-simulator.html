@@ -148,6 +148,7 @@ textarea{min-height:70px;resize:vertical}
       <h3>お客様情報</h3>
       <div class="field"><label>ジム・会社名</label><input type="text" id="cCompany" placeholder="例：〇〇ボクシングジム"></div>
       <div class="field"><label>ご担当者名</label><input type="text" id="cName"></div>
+      <div class="field"><label>ご住所</label><input type="text" id="cAddr" autocomplete="street-address"></div>
       <div class="field"><label>電話番号</label><input type="text" id="cTel" inputmode="tel"></div>
       <h3>ご希望内容</h3>
       <div class="field">
@@ -430,7 +431,7 @@ let showGuide=false;
 
 $("#logoScale").oninput=e=>{S.logoScale=e.target.value;render();};
 $("#logoY").oninput=e=>{S.logoY=e.target.value;render();};
-["#oz","#qty","#memo","#cCompany","#cName","#cTel"].forEach(id=>$(id).addEventListener("input",renderSpec));
+["#oz","#qty","#memo","#cCompany","#cName","#cAddr","#cTel"].forEach(id=>$(id).addEventListener("input",renderSpec));
 // 数量は12個単位（12未満は12、端数は切り上げ）
 $("#qty").addEventListener("change",e=>{
   const v=parseInt(e.target.value,10);
@@ -486,7 +487,7 @@ function afterLogo(){
 const handTxt={both:"両手",L:"左手のみ",R:"右手のみ"};
 function specText(){
   const L=[];
-  const cust=[["ジム・会社名","#cCompany"],["ご担当者名","#cName"],["電話番号","#cTel"]];
+  const cust=[["ジム・会社名","#cCompany"],["ご担当者名","#cName"],["ご住所","#cAddr"],["電話番号","#cTel"]];
   L.push("【お客様情報】");
   cust.forEach(([k,id])=>L.push(`${k}：${$(id).value.trim()}`));
   L.push("");
